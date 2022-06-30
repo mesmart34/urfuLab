@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+ <PropertyList>
+ <generic>
+    <input>
+        <line_separator>\n</line_separator>
+        <var_separator>;</var_separator>
+        <!--Тангаж-->
+        <chunk>
+            <!-->Имя переменной, в нашем случае неважно какое, главное, чтобы было уникальным в этом файле<-->
+            <name>elevator</name>
+            <!-->Тип, в нашем случае, всегда float<-->
+            <type>float</type>
+            <!-->Правила форматирования, также не изменять<-->
+            <format>%f</format>
+            <!-->Фактор нужен, например, для перевода из одних ЕИ в другие<-->
+            <!-->Например, чтобы перевести км в м, нужно написать 1000<-->
+            <factor>-1</factor>
+            <!-->Путь до значения, что мы хотим изменить<-->
+            <!-->В уже запущенном FlightGear, нажать '/' или в Debug/Browse Internal Properties<-->
+            <node>/controls/flight/elevator</node>
+        </chunk>
+    </input>
+  </generic>
+ </PropertyList>

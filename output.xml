@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<PropertyList>
+  <generic>
+    <output>
+      <line_separator>newline</line_separator>
+      <var_separator>newline</var_separator>
+      <binary_mode>false</binary_mode>
+      <!--Курс-->
+      <chunk>
+        <name>AirSpeed</name>
+        <type>float</type>
+        <format>airspeed %f</format>
+        <factor>0.514444</factor>
+        <node>/velocities/airspeed-kt</node>
+      </chunk>
+    </output>
+  </generic>
+</PropertyList>
