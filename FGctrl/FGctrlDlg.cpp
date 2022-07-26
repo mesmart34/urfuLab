@@ -26,12 +26,12 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// Dialog Data
+	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 // Implementation
@@ -65,7 +65,7 @@ CFGctrlDlg::CFGctrlDlg(CWnd* pParent /*=nullptr*/)
 void CFGctrlDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_SLIDER1, AileroneSlider);
+	DDX_Control(pDX, IDC_SLIDER1, TangageSlider);
 }
 
 BEGIN_MESSAGE_MAP(CFGctrlDlg, CDialogEx)
@@ -116,9 +116,9 @@ BOOL CFGctrlDlg::OnInitDialog()
 
 	if (WSAStartup(DLLVersion, &wsaData) != 0) AfxMessageBox(_T("Ошибка библиотеки"), MB_ICONINFORMATION);
 
-	int Positions = 40; // 20*2
-	AileroneSlider.SetRange(-Positions / 2, Positions / 2, 1);
-	AileroneSlider.SetPos(0);
+	int Positions = 100;
+	TangageSlider.SetRange(-Positions, Positions, 1);
+	TangageSlider.SetPos(0);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -183,9 +183,9 @@ void CFGctrlDlg::connect_to_FG()
 	addr.sin_port = htons(5401);
 	addr.sin_family = AF_INET;
 
-	Connection = socket(AF_INET, SOCK_STREAM, NULL);
+	Connection = socket(AF_INET, SOCK_DGRAM, NULL);
 	if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) AfxMessageBox(_T("Ошибка подключения"), MB_ICONINFORMATION);
-	//else AfxMessageBox(_T("Подключено!"), MB_ICONINFORMATION);
+	else AfxMessageBox(_T("Подключено!"), MB_ICONINFORMATION);
 }
 
 
@@ -193,27 +193,26 @@ void CFGctrlDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	CSliderCtrl* pSlider = reinterpret_cast<CSliderCtrl*>(pScrollBar);
 
-	if (pSlider == &AileroneSlider)
-	{
-		RotateAilerone();
-	}
+	if (pSlider == &TangageSlider) RotateTangage();
 
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-char msg[256];
 
-void CFGctrlDlg::RotateAilerone()
+void CFGctrlDlg::RotateTangage()
 {
-	//connect_to_FG();
-	sprintf(msg, "set /controls/flight/aileron %f\r\n", AileroneSlider.GetPos() * 0.05);
-	send(Connection, msg, sizeof(msg), NULL);
+	float value = double(TangageSlider.GetPos()) / 100;
+	char msg[256];
+
+	sprintf(msg, "%.2f\n", value);
+	if (value >= 0) send(Connection, msg, 5, NULL);
+	else send(Connection, msg, 6, NULL);
 }
 
 
 void CFGctrlDlg::disconnect_from_FG()
 {
-	sprintf(msg, "quit\r\n");
+	/*sprintf(msg, "quit\r\n");
 	send(Connection, msg, sizeof(msg), NULL);
-	if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) AfxMessageBox(_T("Соединение разорвано"), MB_ICONINFORMATION);
+	if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) AfxMessageBox(_T("Соединение разорвано"), MB_ICONINFORMATION);*/
 }

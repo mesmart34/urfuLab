@@ -33,9 +33,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void connect_to_FG();
-	CSliderCtrl AileroneSlider;
+	CSliderCtrl TangageSlider;
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 
-	void RotateAilerone();
+	void RotateTangage();
 	afx_msg void disconnect_from_FG();
 };
