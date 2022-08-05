@@ -36,6 +36,10 @@ public:
 	CSliderCtrl TangageSlider;
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 
-	void RotateTangage();
+	void UpdateControls();
 	afx_msg void disconnect_from_FG();
+	CSliderCtrl KrenSlider;
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void CheckSystem();
+	CSliderCtrl ThrottleSlider;
 };

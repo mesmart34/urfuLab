@@ -66,6 +66,8 @@ void CFGctrlDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_SLIDER1, TangageSlider);
+	DDX_Control(pDX, IDC_SLIDER2, KrenSlider);
+	DDX_Control(pDX, IDC_SLIDER3, ThrottleSlider);
 }
 
 BEGIN_MESSAGE_MAP(CFGctrlDlg, CDialogEx)
@@ -75,6 +77,8 @@ BEGIN_MESSAGE_MAP(CFGctrlDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &CFGctrlDlg::connect_to_FG)
 	ON_WM_HSCROLL()
 	ON_BN_CLICKED(IDC_BUTTON2, &CFGctrlDlg::disconnect_from_FG)
+	ON_WM_VSCROLL()
+	ON_BN_CLICKED(IDC_BUTTON3, &CFGctrlDlg::CheckSystem)
 END_MESSAGE_MAP()
 
 
@@ -119,6 +123,12 @@ BOOL CFGctrlDlg::OnInitDialog()
 	int Positions = 100;
 	TangageSlider.SetRange(-Positions, Positions, 1);
 	TangageSlider.SetPos(0);
+
+	KrenSlider.SetRange(-Positions, Positions, 1);
+	KrenSlider.SetPos(0);
+
+	ThrottleSlider.SetRange(0, Positions, 1);
+	ThrottleSlider.SetPos(Positions);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -193,20 +203,21 @@ void CFGctrlDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	CSliderCtrl* pSlider = reinterpret_cast<CSliderCtrl*>(pScrollBar);
 
-	if (pSlider == &TangageSlider) RotateTangage();
+	if (pSlider == &KrenSlider) UpdateControls();
 
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
 
-void CFGctrlDlg::RotateTangage()
+void CFGctrlDlg::UpdateControls()
 {
-	float value = double(TangageSlider.GetPos()) / 100;
+	float valueTangage = double(TangageSlider.GetPos()) / 100;
+	float valueKren = double(KrenSlider.GetPos()) / 100;
+	float valueThrottle = double(ThrottleSlider.GetPos()) / 100 - 1.0;
 	char msg[256];
 
-	sprintf(msg, "%.2f\n", value);
-	if (value >= 0) send(Connection, msg, 5, NULL);
-	else send(Connection, msg, 6, NULL);
+	sprintf(msg, "%.2f;%.2f;%.2f\n", -1.0 * valueKren, valueTangage, valueThrottle);
+	send(Connection, msg, strlen(msg), NULL);
 }
 
 
@@ -215,4 +226,41 @@ void CFGctrlDlg::disconnect_from_FG()
 	/*sprintf(msg, "quit\r\n");
 	send(Connection, msg, sizeof(msg), NULL);
 	if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) AfxMessageBox(_T("Соединение разорвано"), MB_ICONINFORMATION);*/
+}
+
+
+void CFGctrlDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	CSliderCtrl* pSlider = reinterpret_cast<CSliderCtrl*>(pScrollBar);
+
+	if (pSlider == &TangageSlider || pSlider == &ThrottleSlider) UpdateControls();
+
+	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CFGctrlDlg::CheckSystem()
+{
+	while (1)
+	{
+		for (double x = -1.0; x <= 1.0; x += 0.01)
+		{
+			KrenSlider.SetPos(int(x * 100));
+			TangageSlider.SetPos(int(x * 100));
+			//if (x >= 0)
+				ThrottleSlider.SetPos(int(x * 100));
+			UpdateControls();
+			Sleep(25);
+		}
+
+		for (double x = 1.0; x >= -1.0; x -= 0.01)
+		{
+			KrenSlider.SetPos(int(x * 100));
+			TangageSlider.SetPos(int(x * 100));
+			//if (x >= 0)
+				ThrottleSlider.SetPos(int(x * 100));
+			UpdateControls();
+			Sleep(25);
+		}
+	}
 }
