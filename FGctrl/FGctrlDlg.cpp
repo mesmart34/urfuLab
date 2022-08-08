@@ -79,6 +79,7 @@ BEGIN_MESSAGE_MAP(CFGctrlDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON2, &CFGctrlDlg::disconnect_from_FG)
 	ON_WM_VSCROLL()
 	ON_BN_CLICKED(IDC_BUTTON3, &CFGctrlDlg::CheckSystem)
+	ON_BN_CLICKED(IDC_BUTTON4, &CFGctrlDlg::take_off)
 END_MESSAGE_MAP()
 
 
@@ -247,8 +248,7 @@ void CFGctrlDlg::CheckSystem()
 		{
 			KrenSlider.SetPos(int(x * 100));
 			TangageSlider.SetPos(int(x * 100));
-			//if (x >= 0)
-				ThrottleSlider.SetPos(int(x * 100));
+			if (x >= 0)	ThrottleSlider.SetPos(int(x * 100));
 			UpdateControls();
 			Sleep(25);
 		}
@@ -257,10 +257,43 @@ void CFGctrlDlg::CheckSystem()
 		{
 			KrenSlider.SetPos(int(x * 100));
 			TangageSlider.SetPos(int(x * 100));
-			//if (x >= 0)
-				ThrottleSlider.SetPos(int(x * 100));
+			if (x >= 0)	ThrottleSlider.SetPos(int(x * 100));
 			UpdateControls();
 			Sleep(25);
 		}
+	}
+}
+
+
+void CFGctrlDlg::take_off()
+{
+	ThrottleSlider.SetPos(100 - 20);
+
+	for (double x = ThrottleSlider.GetPos(); x >= 30; x -= 1)
+	{
+		ThrottleSlider.SetPos(x);
+		UpdateControls();
+		Sleep(25);
+	}
+
+	for (double x = ThrottleSlider.GetPos(); x >= ThrottleSlider.GetRangeMin(); x -= 1)
+	{
+		ThrottleSlider.SetPos(x);
+		UpdateControls();
+		Sleep(1000);
+	}
+
+	for (double x = TangageSlider.GetPos(); x < 100 / 2; x += 1)
+	{
+		TangageSlider.SetPos(x);
+		UpdateControls();
+		Sleep(250);
+	}
+
+	for (double x = TangageSlider.GetPos(); x > 0; x -= 1)
+	{
+		TangageSlider.SetPos(x);
+		UpdateControls();
+		Sleep(250);
 	}
 }

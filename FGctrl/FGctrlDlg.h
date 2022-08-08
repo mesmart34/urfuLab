@@ -42,4 +42,5 @@ public:
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void CheckSystem();
 	CSliderCtrl ThrottleSlider;
+	afx_msg void take_off();
 };
