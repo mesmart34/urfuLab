@@ -11,6 +11,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #include <winsock2.h>
 #include <iostream>
+#include <thread>
 
 #pragma warning(disable: 4996)
 
@@ -18,6 +19,11 @@
 #define new DEBUG_NEW
 #endif
 
+CFGctrlDlg* ClassClone;
+SOCKET txSock, rxSock;
+SOCKADDR_IN txAddr, rxAddr;
+
+volatile bool TakeOffAccept = false;
 
 // CAboutDlg dialog used for App About
 
@@ -68,6 +74,10 @@ void CFGctrlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLIDER1, TangageSlider);
 	DDX_Control(pDX, IDC_SLIDER2, KrenSlider);
 	DDX_Control(pDX, IDC_SLIDER3, ThrottleSlider);
+	DDX_Control(pDX, IDC_EDIT1, RecievedData);
+	DDX_Control(pDX, IDC_EDIT2, KrenData);
+	DDX_Control(pDX, IDC_EDIT3, TangageData);
+	DDX_Control(pDX, IDC_EDIT4, TrottleData);
 }
 
 BEGIN_MESSAGE_MAP(CFGctrlDlg, CDialogEx)
@@ -80,6 +90,7 @@ BEGIN_MESSAGE_MAP(CFGctrlDlg, CDialogEx)
 	ON_WM_VSCROLL()
 	ON_BN_CLICKED(IDC_BUTTON3, &CFGctrlDlg::CheckSystem)
 	ON_BN_CLICKED(IDC_BUTTON4, &CFGctrlDlg::take_off)
+	ON_BN_CLICKED(IDC_BUTTON5, &CFGctrlDlg::TestRecieve)
 END_MESSAGE_MAP()
 
 
@@ -88,6 +99,7 @@ END_MESSAGE_MAP()
 BOOL CFGctrlDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+	ClassClone = this;
 
 	// Add "About..." menu item to system menu.
 
@@ -183,22 +195,64 @@ HCURSOR CFGctrlDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-SOCKET Connection;
-SOCKADDR_IN addr;
+DWORD WINAPI rxDataFromFG(__in LPVOID lpParameter)
+{
+	char rxData[256];
+	CString rxDataText[3];
+	int i = 0, j = 0;
+
+	while (1)
+	{
+		recv(rxSock, rxData, sizeof(rxData), NULL);
+		for (int k = 0; k < 3; k++) rxDataText[k].Empty();
+
+		i = 0;
+		j = 0;
+		while (rxData[i] != '\n')
+		{
+			if (rxData[i] == ';') j++;
+			else rxDataText[j].Append(CString(rxData[i]));	
+			i++;
+		}
+
+		ClassClone->KrenData.SetWindowTextW(rxDataText[0]);
+		ClassClone->TangageData.SetWindowTextW(rxDataText[1]);
+		ClassClone->TrottleData.SetWindowTextW(rxDataText[2]);
+
+		Sleep(50);
+	}
+}
+
+DWORD WINAPI thread2(__in LPVOID lpParameter)
+{
+	while (1)
+	{
+		if (TakeOffAccept) ClassClone->TakeOffFunc();
+		Sleep(100);
+	}
+}
 
 
 void CFGctrlDlg::connect_to_FG()
 {
-	int sizeofaddr = sizeof(addr);
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	addr.sin_port = htons(5401);
-	addr.sin_family = AF_INET;
+	txAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	txAddr.sin_port = htons(5401);
+	txAddr.sin_family = AF_INET;
+	txSock = socket(AF_INET, SOCK_DGRAM, NULL);
+	if (connect(txSock, (SOCKADDR*)&txAddr, sizeof(txAddr)) != 0) AfxMessageBox(_T("Ошибка подключения:\nсокет передачи"), MB_ICONINFORMATION);
+	else AfxMessageBox(_T("Сокет приема:\nПодключено!"), MB_ICONINFORMATION);
 
-	Connection = socket(AF_INET, SOCK_DGRAM, NULL);
-	if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) AfxMessageBox(_T("Ошибка подключения"), MB_ICONINFORMATION);
-	else AfxMessageBox(_T("Подключено!"), MB_ICONINFORMATION);
+	rxAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	rxAddr.sin_port = htons(5402);
+	rxAddr.sin_family = AF_INET;
+	rxSock = socket(AF_INET, SOCK_DGRAM, NULL);
+	if (bind(rxSock, (SOCKADDR*)&rxAddr, sizeof(rxAddr)) != 0) AfxMessageBox(_T("Ошибка подключения:\nсокет приема"), MB_ICONINFORMATION);
+	else AfxMessageBox(_T("Сокет передачи:\nПодключено!"), MB_ICONINFORMATION);
+
+	DWORD threadID1_rx, threadID2;
+	HANDLE rxHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)rxDataFromFG, 0, 0, &threadID1_rx);
+	HANDLE h2 = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)thread2, 0, 0, &threadID2);
 }
-
 
 void CFGctrlDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
@@ -209,26 +263,22 @@ void CFGctrlDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-
 void CFGctrlDlg::UpdateControls()
 {
 	float valueTangage = double(TangageSlider.GetPos()) / 100;
 	float valueKren = double(KrenSlider.GetPos()) / 100;
 	float valueThrottle = double(ThrottleSlider.GetPos()) / 100 - 1.0;
+
 	char msg[256];
 
-	sprintf(msg, "%.2f;%.2f;%.2f\n", -1.0 * valueKren, valueTangage, valueThrottle);
-	send(Connection, msg, strlen(msg), NULL);
+	sprintf(msg, "%.2f;%.2f;%.2f\n", valueKren, valueTangage, valueThrottle);
+	send(txSock, msg, strlen(msg), NULL);
 }
-
 
 void CFGctrlDlg::disconnect_from_FG()
 {
-	/*sprintf(msg, "quit\r\n");
-	send(Connection, msg, sizeof(msg), NULL);
-	if (connect(Connection, (SOCKADDR*)&addr, sizeof(addr)) != 0) AfxMessageBox(_T("Соединение разорвано"), MB_ICONINFORMATION);*/
-}
 
+}
 
 void CFGctrlDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
@@ -238,7 +288,6 @@ void CFGctrlDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
 }
-
 
 void CFGctrlDlg::CheckSystem()
 {
@@ -264,9 +313,19 @@ void CFGctrlDlg::CheckSystem()
 	}
 }
 
-
 void CFGctrlDlg::take_off()
 {
+	TakeOffAccept = true;
+}
+
+void CFGctrlDlg::TestRecieve()
+{
+
+}
+
+void CFGctrlDlg::TakeOffFunc()
+{
+	TakeOffAccept = false;
 	ThrottleSlider.SetPos(100 - 20);
 
 	for (double x = ThrottleSlider.GetPos(); x >= 30; x -= 1)

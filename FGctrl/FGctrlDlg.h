@@ -2,6 +2,8 @@
 // FGctrlDlg.h : header file
 //
 
+#include <afxsock.h>
+
 #pragma once
 
 
@@ -43,4 +45,11 @@ public:
 	afx_msg void CheckSystem();
 	CSliderCtrl ThrottleSlider;
 	afx_msg void take_off();
+	afx_msg void TestRecieve();
+	CEdit RecievedData;
+	CEdit KrenData;
+	CEdit TangageData;
+	CEdit TrottleData;
+
+	void TakeOffFunc();
 };
