@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
  <PropertyList>
  <generic>
-    <input>
+    <output>
         <line_separator>\n</line_separator>
         <var_separator>;</var_separator>
 		<!--Крен-->
@@ -11,7 +11,7 @@
             <!-->Тип, в нашем случае, всегда float<-->
             <type>float</type>
             <!-->Правила форматирования, также не изменять<-->
-            <format>%f</format>
+            <format>%.2f</format>
             <!-->Путь до значения, что мы хотим изменить<-->
             <!-->В уже запущенном FlightGear, нажать '/' или в Debug/Browse Internal Properties<-->
             <node>/controls/flight/aileron</node>
@@ -24,7 +24,7 @@
             <!-->Тип, в нашем случае, всегда float<-->
             <type>float</type>
             <!-->Правила форматирования, также не изменять<-->
-            <format>%f</format>
+            <format>%.2f</format>
             <!-->Фактор нужен, например, для перевода из одних ЕИ в другие<-->
             <!-->Например, чтобы перевести км в м, нужно написать 1000<-->
             <factor>-1</factor>
@@ -40,7 +40,7 @@
             <!-->Тип, в нашем случае, всегда float<-->
             <type>float</type>
             <!-->Правила форматирования, также не изменять<-->
-            <format>%f</format>
+            <format>%.2f</format>
             <!-->Фактор нужен, например, для перевода из одних ЕИ в другие<-->
             <!-->Например, чтобы перевести км в м, нужно написать 1000<-->
             <factor>-1</factor>
@@ -49,6 +49,6 @@
             <node>/controls/engines/current-engine/throttle</node>
         </chunk>
 		
-    </input>
+    </output>
   </generic>
  </PropertyList>
